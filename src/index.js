@@ -77,7 +77,10 @@ const templateMenu = [
                 }
             },
             {
-                label: "remove all products"
+                label: "remove all products",
+                click() {
+                    mainWindow.webContents.send("products:remove-all")
+                }
             },
             {
                 label: "Exit",
