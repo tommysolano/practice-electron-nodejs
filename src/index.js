@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require("electron")
+const { app, BrowserWindow, Menu, ipcMain } = require("electron")
 const url = require("url")
 const path = require("path")
 
@@ -12,7 +12,14 @@ let mainWindow
 let newProductWindow
 
 app.on("ready", ()=>{
-    mainWindow = new BrowserWindow({})
+    mainWindow = new BrowserWindow({
+        webPreferences: {
+            contextIsolation: false,
+            nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+            enableRemoteModule: true
+        }
+    })
     mainWindow.loadURL(url.format({
         pathname: path.join(__dirname, "views/index.html"),
         protocol: "file",
@@ -32,18 +39,30 @@ function createNewProductWindow() {
     newProductWindow = new BrowserWindow({
         width: 400,
         height: 330,
-        title: "add a new product"
+        title: "add a new product",
+        webPreferences: {
+            contextIsolation: false,
+            nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+            enableRemoteModule: true
+        }
     });
     newProductWindow.loadURL(url.format({
         pathname: path.join(__dirname, "views/new-product.html"),
         protocol: "file",
         slashes: true
     }));
-    newProductWindow.setMenu(null);
+    //newProductWindow.setMenu(null);
     newProductWindow.on("close", () => {
         newProductWindow = null
     })
 }
+
+
+ipcMain.on("product:new", (e, newProduct) => {
+    mainWindow.webContents.send("product:new", newProduct);
+    newProductWindow.close()
+})
 
 
 const templateMenu = [
@@ -83,6 +102,7 @@ if(process.env.NODE_ENV !==  "production") {
         submenu: [
             {
                 label: "Show/Hide Dev Tools",
+                accelerator: "Ctrl+D",
                 click(item, focusedWindow){
                     focusedWindow.toggleDevTools()
                 }
